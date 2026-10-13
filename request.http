@@ -1,0 +1,68 @@
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+  "descricao": "Supermercado",
+  "valor" : 187.50,
+  "data": "2026-09-27",
+  "tipo": "DESPESA",
+  "categoria": "Alimentação"
+}
+
+###
+
+PUT http://localhost:8080/transacoes/1
+Content-Type: application/json
+
+{
+  "descricao": "Supermercado Mensal",
+  "valor": 230.90,
+  "data": "2026-09-27",
+  "tipo": "DESPESA",
+  "categoria": "Alimentação"
+}
+
+###
+GET http://localhost:8080/transacoes/1
+
+###
+DELETE http://localhost:8080/transacoes/1
+
+###
+
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+  "descricao": "",
+  "valor": -100,
+  "data": null,
+  "tipo": "",
+  "categoria": ""
+}
+
+###
+
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+  "descricao": "Salario",
+  "valor": 3500.00,
+  "data": "2026-10-02",
+  "tipo": "RECEITA",
+  "categoria": "Trabalho"
+}
+
+###
+
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+  "descricao": "Teste",
+  "valor": 100.00,
+  "data": "2026-10-02",
+  "tipo": "QUALQUER_COISA",
+  "categoria": "Teste"
+}
