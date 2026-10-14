@@ -1,7 +1,4 @@
 package com.jefferson.fintrack.model;
-
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,7 +28,7 @@ public class Transacao {
     @Enumerated(EnumType.STRING)
     private TipoTransacao tipo;
 
-    @NotBlank(message = "A categoria é obrigatória")
+    @NotNull(message = "A categoria é obrigatória")
     @ManyToOne
     @JoinColumn(name = "categoria_id")
     private Categoria categoria;
@@ -76,11 +73,11 @@ public class Transacao {
         this.tipo = tipo;
     }
 
-    public String getCategoria() {
+    public Categoria getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
 }
