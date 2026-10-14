@@ -66,3 +66,16 @@ Content-Type: application/json
   "tipo": "QUALQUER_COISA",
   "categoria": "Teste"
 }
+
+###
+
+GET http://localhost:8080/categorias
+
+###
+
+POST http://localhost:8080/categorias
+Content-Type: application/json
+
+{
+  "nome": "Alimentação"
+}

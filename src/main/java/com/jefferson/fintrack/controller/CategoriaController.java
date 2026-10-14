@@ -1,0 +1,46 @@
+package com.jefferson.fintrack.controller;
+
+import com.jefferson.fintrack.service.CategoriaService;
+import org.springframework.web.bind.annotation.*;
+import com.jefferson.fintrack.model.Categoria;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/categorias")
+public class CategoriaController {
+
+    private final CategoriaService categoriaService;
+
+    public CategoriaController(CategoriaService categoriaService) {
+        this.categoriaService = categoriaService;
+    }
+
+    @GetMapping
+    public List<Categoria> listarTodas() {
+        return categoriaService.listarTodas();
+    }
+
+    @PostMapping
+    public ResponseEntity<Categoria> salvar(
+            @Valid @RequestBody Categoria categoria) {
+
+        Categoria categoriaSalva = categoriaService.salvar(categoria);
+
+        return ResponseEntity.status(201).body(categoriaSalva);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Categoria> buscarPorId(@PathVariable Long id) {
+
+        Categoria categoria = categoriaService.buscarPorId(id);
+
+        if (categoria == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(categoria);
+    }
+}

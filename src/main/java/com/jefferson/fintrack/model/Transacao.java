@@ -32,7 +32,9 @@ public class Transacao {
     private TipoTransacao tipo;
 
     @NotBlank(message = "A categoria é obrigatória")
-    private String categoria;
+    @ManyToOne
+    @JoinColumn(name = "categoria_id")
+    private Categoria categoria;
 
     public Long getId() {
         return id;
