@@ -79,3 +79,49 @@ Content-Type: application/json
 {
   "nome": "Alimentação"
 }
+
+###
+GET http://localhost:8080/categorias/1
+
+###
+GET http://localhost:8080/transacoes
+
+###
+
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+  "descricao": "Supermercado",
+  "valor": 187.50,
+  "data": "2026-10-15",
+  "tipo": "DESPESA",
+  "categoria": {
+    "id": 1
+  }
+}
+
+###
+POST http://localhost:8080/transacoes
+Content-Type: application/json
+
+{
+"descricao": "Supermercado",
+"valor": 200.00,
+"data": "2026-10-15",
+"tipo": "DESPESA",
+"categoriaId": 1
+}
+
+###
+
+PUT http://localhost:8080/transacoes/2
+Content-Type: application/json
+
+{
+  "descricao": "Supermercado Mensal",
+  "valor": 250.00,
+  "data": "2026-10-15",
+  "tipo": "DESPESA",
+  "categoriaId": 1
+}
