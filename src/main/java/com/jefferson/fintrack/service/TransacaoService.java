@@ -2,6 +2,7 @@ package com.jefferson.fintrack.service;
 
 import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.exception.CategoriaNaoEncontradaException;
+import com.jefferson.fintrack.exception.TransacaoNaoEncontradaException;
 import com.jefferson.fintrack.repository.TransacaoRepository;
 import org.springframework.stereotype.Service;
 import com.jefferson.fintrack.dto.TransacaoRequest;
@@ -48,18 +49,13 @@ public class TransacaoService {
     }
 
     public Transacao buscarPorId(Long id){
-        return transacaoRepository.findById(id).orElse(null);
+        return transacaoRepository.findById(id)
+                .orElseThrow(TransacaoNaoEncontradaException::new);
     }
 
     public Transacao atualizar(Long id, TransacaoRequest request) {
 
-        Transacao transacaoExistente = transacaoRepository
-                .findById(id)
-                .orElse(null);
-
-        if (transacaoExistente == null) {
-            return null;
-        }
+        Transacao transacaoExistente = buscarPorId(id);
 
         Categoria categoria = categoriaRepository
                 .findById(request.getCategoriaId())
@@ -75,6 +71,7 @@ public class TransacaoService {
     }
 
     public void excluir(Long id) {
-        transacaoRepository.deleteById(id);
+        Transacao transacao = buscarPorId(id);
+        transacaoRepository.delete(transacao);
     }
 }

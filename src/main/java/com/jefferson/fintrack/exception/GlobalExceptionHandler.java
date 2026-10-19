@@ -12,6 +12,13 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(TransacaoNaoEncontradaException.class)
+    public ResponseEntity<Map<String, String>> tratarTransacaoNaoEncontrada(
+            TransacaoNaoEncontradaException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("mensagem", exception.getMessage()));
+    }
+
     @ExceptionHandler(CategoriaNaoEncontradaException.class)
     public ResponseEntity<Map<String, String>> tratarCategoriaNaoEncontrada(
             CategoriaNaoEncontradaException exception) {

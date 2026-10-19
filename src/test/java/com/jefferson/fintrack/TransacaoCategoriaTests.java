@@ -87,7 +87,8 @@ class TransacaoCategoriaTests {
     void transacaoInexistenteContinuaRetornando404() throws Exception {
         when(transacoes.findById(1L)).thenReturn(Optional.empty());
         mvc.perform(put("/transacoes/1").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.mensagem").value("Transação não encontrada"));
         verifyNoInteractions(categorias);
         verify(transacoes, never()).save(any());
     }

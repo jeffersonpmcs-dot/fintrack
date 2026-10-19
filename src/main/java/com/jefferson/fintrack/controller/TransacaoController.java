@@ -38,10 +38,6 @@ public class TransacaoController {
 
         Transacao transacao = transacaoService.buscarPorId(id);
 
-        if (transacao == null) {
-            return ResponseEntity.notFound().build();
-        }
-
         return ResponseEntity.ok(transacao);
     }
 
@@ -53,21 +49,11 @@ public class TransacaoController {
         Transacao transacaoAtualizada =
                 transacaoService.atualizar(id, request);
 
-        if (transacaoAtualizada == null) {
-            return ResponseEntity.notFound().build();
-        }
-
         return ResponseEntity.ok(transacaoAtualizada);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> excluir(@PathVariable Long id) {
-
-        Transacao transacao = transacaoService.buscarPorId(id);
-
-        if (transacao == null) {
-            return ResponseEntity.notFound().build();
-        }
 
         transacaoService.excluir(id);
 
