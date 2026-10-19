@@ -30,10 +30,6 @@ public class TransacaoController {
 
         Transacao transacaoSalva = transacaoService.salvar(request);
 
-        if (transacaoSalva == null) {
-            return ResponseEntity.notFound().build();
-        }
-
         return ResponseEntity.status(201).body(transacaoSalva);
     }
 
