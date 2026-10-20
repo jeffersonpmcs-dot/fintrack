@@ -1,6 +1,7 @@
 package com.jefferson.fintrack.service;
 
 import com.jefferson.fintrack.model.Categoria;
+import com.jefferson.fintrack.exception.CategoriaNaoEncontradaException;
 import com.jefferson.fintrack.repository.CategoriaRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +25,8 @@ public class CategoriaService {
     }
 
     public Categoria buscarPorId(Long id) {
-        return categoriaRepository.findById(id).orElse(null);
+        return categoriaRepository.findById(id)
+                .orElseThrow(CategoriaNaoEncontradaException::new);
     }
 }
 

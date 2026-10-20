@@ -37,10 +37,6 @@ public class CategoriaController {
 
         Categoria categoria = categoriaService.buscarPorId(id);
 
-        if (categoria == null) {
-            return ResponseEntity.notFound().build();
-        }
-
         return ResponseEntity.ok(categoria);
     }
 }
