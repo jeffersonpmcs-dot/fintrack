@@ -4,6 +4,7 @@ import com.jefferson.fintrack.controller.CategoriaController;
 import com.jefferson.fintrack.exception.GlobalExceptionHandler;
 import com.jefferson.fintrack.model.Categoria;
 import com.jefferson.fintrack.repository.CategoriaRepository;
+import com.jefferson.fintrack.repository.TransacaoRepository;
 import com.jefferson.fintrack.service.CategoriaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class CategoriaAtualizacaoTests {
     void configurar() {
         categorias = mock(CategoriaRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new CategoriaController(
-                        new CategoriaService(categorias)))
+                        new CategoriaService(categorias, mock(TransacaoRepository.class))))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
