@@ -28,5 +28,10 @@ public class CategoriaService {
         return categoriaRepository.findById(id)
                 .orElseThrow(CategoriaNaoEncontradaException::new);
     }
-}
 
+    public Categoria atualizar(Long id, Categoria categoria) {
+        Categoria categoriaExistente = buscarPorId(id);
+        categoriaExistente.setNome(categoria.getNome());
+        return categoriaRepository.save(categoriaExistente);
+    }
+}
