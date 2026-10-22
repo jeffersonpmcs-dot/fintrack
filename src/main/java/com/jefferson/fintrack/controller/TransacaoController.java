@@ -1,6 +1,7 @@
 package com.jefferson.fintrack.controller;
 
 import com.jefferson.fintrack.dto.TransacaoRequest;
+import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
 import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.model.TipoTransacao;
 import com.jefferson.fintrack.service.TransacaoService;
@@ -40,6 +41,15 @@ public class TransacaoController {
         Transacao transacaoSalva = transacaoService.salvar(request);
 
         return ResponseEntity.status(201).body(transacaoSalva);
+    }
+
+    @GetMapping("/resumo")
+    public ResumoFinanceiroResponse resumir(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim) {
+        return transacaoService.resumir(dataInicio, dataFim);
     }
 
     @GetMapping("/{id}")

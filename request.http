@@ -142,3 +142,14 @@ GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&ca
 
 ### Periodo invalido: deve retornar 400
 GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01
+### Resumo financeiro por periodo inclusivo
+GET http://localhost:8080/transacoes/resumo?dataInicio=2026-10-01&dataFim=2026-10-31
+
+### Resumo financeiro de todo o historico
+GET http://localhost:8080/transacoes/resumo
+
+### Resumo a partir de uma data
+GET http://localhost:8080/transacoes/resumo?dataInicio=2026-10-01
+
+### Resumo com periodo invalido: deve retornar 400
+GET http://localhost:8080/transacoes/resumo?dataInicio=2026-10-31&dataFim=2026-10-01

@@ -9,11 +9,14 @@ import jakarta.persistence.criteria.Predicate;
 import com.jefferson.fintrack.repository.TransacaoRepository;
 import org.springframework.stereotype.Service;
 import com.jefferson.fintrack.dto.TransacaoRequest;
+import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
+import com.jefferson.fintrack.dto.TotalPorTipo;
 import com.jefferson.fintrack.model.Categoria;
 import com.jefferson.fintrack.repository.CategoriaRepository;
 import java.util.List;
 import java.util.ArrayList;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 
 @Service
 public class TransacaoService {
@@ -55,10 +58,7 @@ public class TransacaoService {
 
     public List<Transacao> listar(LocalDate dataInicio, LocalDate dataFim,
                                  Long categoriaId, TipoTransacao tipo) {
-        if (dataInicio != null && dataFim != null && dataInicio.isAfter(dataFim)) {
-            throw new FiltroTransacaoInvalidoException(
-                    "A data inicial não pode ser posterior à data final");
-        }
+        validarPeriodo(dataInicio, dataFim);
         if (categoriaId != null && categoriaId <= 0) {
             throw new FiltroTransacaoInvalidoException(
                     "O ID da categoria deve ser maior que zero");
@@ -88,6 +88,30 @@ public class TransacaoService {
     public Transacao buscarPorId(Long id){
         return transacaoRepository.findById(id)
                 .orElseThrow(TransacaoNaoEncontradaException::new);
+    }
+
+    public ResumoFinanceiroResponse resumir(LocalDate dataInicio, LocalDate dataFim) {
+        validarPeriodo(dataInicio, dataFim);
+        BigDecimal totalReceitas = new BigDecimal("0.00");
+        BigDecimal totalDespesas = new BigDecimal("0.00");
+
+        for (TotalPorTipo total : transacaoRepository.somarPorTipoNoPeriodo(dataInicio, dataFim)) {
+            if (total.tipo() == TipoTransacao.RECEITA) {
+                totalReceitas = total.total();
+            } else if (total.tipo() == TipoTransacao.DESPESA) {
+                totalDespesas = total.total();
+            }
+        }
+
+        return new ResumoFinanceiroResponse(
+                totalReceitas, totalDespesas, totalReceitas.subtract(totalDespesas));
+    }
+
+    private void validarPeriodo(LocalDate dataInicio, LocalDate dataFim) {
+        if (dataInicio != null && dataFim != null && dataInicio.isAfter(dataFim)) {
+            throw new FiltroTransacaoInvalidoException(
+                    "A data inicial não pode ser posterior à data final");
+        }
     }
 
     public Transacao atualizar(Long id, TransacaoRequest request) {
