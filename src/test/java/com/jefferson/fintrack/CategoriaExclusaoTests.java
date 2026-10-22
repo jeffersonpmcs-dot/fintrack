@@ -3,6 +3,7 @@ package com.jefferson.fintrack;
 import com.jefferson.fintrack.controller.CategoriaController;
 import com.jefferson.fintrack.exception.GlobalExceptionHandler;
 import com.jefferson.fintrack.model.Categoria;
+import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.repository.CategoriaRepository;
 import com.jefferson.fintrack.repository.TransacaoRepository;
 import com.jefferson.fintrack.service.CategoriaService;
@@ -73,7 +74,7 @@ class CategoriaExclusaoTests {
 
         verify(categorias, never()).delete(any(Categoria.class));
         verify(categorias, never()).flush();
-        verify(transacoes, never()).delete(any());
+        verify(transacoes, never()).delete(any(Transacao.class));
     }
 
     @Test
@@ -88,6 +89,6 @@ class CategoriaExclusaoTests {
                 .andExpect(jsonPath("$.mensagem").value(
                         "Não é possível excluir uma categoria com transações vinculadas"));
 
-        verify(transacoes, never()).delete(any());
+        verify(transacoes, never()).delete(any(Transacao.class));
     }
 }

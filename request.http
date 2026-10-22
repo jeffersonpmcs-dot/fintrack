@@ -125,3 +125,20 @@ Content-Type: application/json
   "tipo": "DESPESA",
   "categoriaId": 1
 }
+### Listar todas as transacoes (sem filtros)
+GET http://localhost:8080/transacoes
+
+### Filtrar por periodo inclusivo (datas em AAAA-MM-DD)
+GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31
+
+### Filtrar por categoria (ajuste o ID para uma categoria existente)
+GET http://localhost:8080/transacoes?categoriaId=1
+
+### Filtrar por tipo: RECEITA ou DESPESA
+GET http://localhost:8080/transacoes?tipo=DESPESA
+
+### Combinar periodo, categoria e tipo
+GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&categoriaId=1&tipo=DESPESA
+
+### Periodo invalido: deve retornar 400
+GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01

@@ -2,12 +2,15 @@ package com.jefferson.fintrack.controller;
 
 import com.jefferson.fintrack.dto.TransacaoRequest;
 import com.jefferson.fintrack.model.Transacao;
+import com.jefferson.fintrack.model.TipoTransacao;
 import com.jefferson.fintrack.service.TransacaoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/transacoes")
@@ -20,8 +23,14 @@ public class TransacaoController {
     }
 
     @GetMapping
-    public List<Transacao> listarTodos() {
-        return transacaoService.listarTodas();
+    public List<Transacao> listarTodos(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim,
+            @RequestParam(required = false) Long categoriaId,
+            @RequestParam(required = false) TipoTransacao tipo) {
+        return transacaoService.listar(dataInicio, dataFim, categoriaId, tipo);
     }
 
     @PostMapping
