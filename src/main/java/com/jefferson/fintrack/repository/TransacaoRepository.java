@@ -3,6 +3,7 @@ package com.jefferson.fintrack.repository;
 import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.dto.TotalPorTipo;
 import com.jefferson.fintrack.dto.GastoPorCategoriaResponse;
+import com.jefferson.fintrack.dto.TotalMensalPorTipo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +21,20 @@ public interface TransacaoRepository
     List<Transacao> findAllByUsuarioId(Long usuarioId);
 
     Optional<Transacao> findByIdAndUsuarioId(Long id, Long usuarioId);
+
+    @Query("""
+            select new com.jefferson.fintrack.dto.TotalMensalPorTipo(month(t.data), t.tipo, sum(t.valor))
+            from Transacao t
+            where t.usuario.id = :usuarioId
+              and t.data >= :inicioAno
+              and t.data < :inicioProximoAno
+            group by month(t.data), t.tipo
+            order by month(t.data), t.tipo
+            """)
+    List<TotalMensalPorTipo> somarPorMesETipoNoAno(
+            @Param("usuarioId") Long usuarioId,
+            @Param("inicioAno") LocalDate inicioAno,
+            @Param("inicioProximoAno") LocalDate inicioProximoAno);
 
     @Query("""
             select new com.jefferson.fintrack.dto.GastoPorCategoriaResponse(c.id, c.nome, sum(t.valor))

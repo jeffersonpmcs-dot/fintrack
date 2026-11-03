@@ -213,6 +213,18 @@ GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&ca
 
 ### Periodo invalido: deve retornar 400
 GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01
+### Evolucao mensal: 12 meses do ano, com receitas, despesas e saldo (requer login)
+GET http://localhost:8080/transacoes/evolucao-mensal?ano=2026
+
+### Evolucao mensal de outro ano (meses sem movimento retornam zeros)
+GET http://localhost:8080/transacoes/evolucao-mensal?ano=2027
+
+### Ano fora do intervalo: deve retornar 400
+GET http://localhost:8080/transacoes/evolucao-mensal?ano=0
+
+### Ano obrigatorio: deve retornar 400
+GET http://localhost:8080/transacoes/evolucao-mensal
+
 ### Gastos por categoria no periodo inclusivo (requer login e cookie de sessao)
 GET http://localhost:8080/transacoes/gastos-por-categoria?dataInicio=2026-11-01&dataFim=2026-11-30
 

@@ -24,6 +24,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Filtros combináveis por período, categoria e tipo (`RECEITA` ou `DESPESA`).
 - Resumo financeiro com total de receitas, total de despesas e saldo por período.
 - Gastos por categoria no período, ordenados do maior para o menor e restritos à conta autenticada.
+- Evolução mensal de receitas, despesas e saldo, com os 12 meses do ano escolhido.
 - Validação de campos obrigatórios e valores positivos.
 - Respostas 404 para categorias ou transações inexistentes e 409 para categoria em uso.
 
@@ -227,6 +228,7 @@ O cadastro e a edição de transações recebem `categoriaId`, em vez do nome ou
 | `DELETE` | `/transacoes/{id}` | Excluir transação |
 | `GET` | `/transacoes/resumo` | Consultar receitas, despesas e saldo |
 | `GET` | `/transacoes/gastos-por-categoria` | Consultar despesas agrupadas por categoria |
+| `GET` | `/transacoes/evolucao-mensal` | Consultar receitas, despesas e saldo de cada mês do ano |
 
 Cadastros retornam 201, consultas e atualizações retornam 200, e exclusões bem-sucedidas retornam 204 sem corpo.
 
@@ -275,6 +277,30 @@ Os dois filtros de data são opcionais e inclusivos; sem datas, a consulta consi
 
 O resultado é ordenado por total decrescente, depois por nome e ID crescentes para desempate. Os valores usam `BigDecimal`. Datas invertidas ou malformadas retornam 400; consultas sem login retornam 401. A consulta verifica tanto o dono da transação quanto o da categoria e exclui registros antigos sem dono. Esta rota fornece dados para o futuro dashboard; a interface visual ainda está pendente.
 
+### Evolução mensal
+
+Com a sessão autenticada, informe o ano desejado:
+
+```http
+GET http://localhost:8080/transacoes/evolucao-mensal?ano=2026
+```
+
+A resposta contém exatamente 12 itens, em ordem de janeiro (`mes: 1`) a dezembro (`mes: 12`). Cada item informa `ano`, `mes`, `totalReceitas`, `totalDespesas` e `saldo`. Exemplo de um item:
+
+```json
+{
+  "ano": 2026,
+  "mes": 1,
+  "totalReceitas": 1000.30,
+  "totalDespesas": 100.05,
+  "saldo": 900.25
+}
+```
+
+O parâmetro `ano` é obrigatório e aceita inteiros de 1 a 9999. Ano ausente, inválido ou fora desse intervalo retorna 400; consultas sem login retornam 401. O período inclui o primeiro e o último dia do ano e considera apenas as transações da conta autenticada. Registros antigos sem dono ficam fora dos totais.
+
+Meses sem movimento têm os três valores financeiros iguais a zero. Um ano inteiro sem transações também retorna os 12 meses zerados. O saldo é o resultado daquele mês (`receitas - despesas`), sem carregar o saldo dos meses ou anos anteriores. As somas usam `BigDecimal` e são agrupadas no banco. A soma dos meses corresponde ao resumo financeiro do mesmo ano. O gráfico visual será construído junto com o frontend.
+
 O arquivo [`request.http`](request.http) registra exemplos usados durante o desenvolvimento. Ele ainda contém requisições antigas com `categoria` no corpo; para criar ou editar transações, siga o formato atual com `categoriaId` apresentado acima.
 
 ## Executar os testes
@@ -318,7 +344,7 @@ O objetivo permanece construir uma aplicação web completa. O estado atual incl
 - [x] Login por sessão, consulta da conta autenticada, CSRF e logout.
 - [x] Vínculo dos dados e autorização de acesso por usuário.
 - [x] Consulta de gastos por categoria para o dashboard.
-- [ ] Evolução mensal para o dashboard.
+- [x] Consulta de evolução mensal para o dashboard.
 - [ ] Importação de extratos CSV, com definição do formato e tratamento de linhas inválidas.
 - [ ] Relatórios e definição do formato de exportação.
 - [ ] Frontend com HTML, CSS e JavaScript, incluindo dashboard e gráficos.

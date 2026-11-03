@@ -3,6 +3,7 @@ package com.jefferson.fintrack.controller;
 import com.jefferson.fintrack.dto.TransacaoRequest;
 import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
 import com.jefferson.fintrack.dto.GastoPorCategoriaResponse;
+import com.jefferson.fintrack.dto.EvolucaoMensalResponse;
 import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.model.TipoTransacao;
 import com.jefferson.fintrack.service.TransacaoService;
@@ -60,6 +61,11 @@ public class TransacaoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate dataFim) {
         return transacaoService.gastosPorCategoria(dataInicio, dataFim);
+    }
+
+    @GetMapping("/evolucao-mensal")
+    public List<EvolucaoMensalResponse> evolucaoMensal(@RequestParam int ano) {
+        return transacaoService.evolucaoMensal(ano);
     }
 
     @GetMapping("/{id}")

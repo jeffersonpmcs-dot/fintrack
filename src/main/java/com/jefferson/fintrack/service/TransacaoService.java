@@ -1,6 +1,8 @@
 package com.jefferson.fintrack.service;
 
 import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
+import com.jefferson.fintrack.dto.EvolucaoMensalResponse;
+import com.jefferson.fintrack.dto.TotalMensalPorTipo;
 import com.jefferson.fintrack.dto.GastoPorCategoriaResponse;
 import com.jefferson.fintrack.dto.TotalPorTipo;
 import com.jefferson.fintrack.dto.TransacaoRequest;
@@ -21,6 +23,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Service
 @Transactional(readOnly = true)
@@ -107,6 +111,35 @@ public class TransacaoService {
         Long usuarioId = usuarioAtualService.obter().getId();
         validarPeriodo(dataInicio, dataFim);
         return transacaoRepository.somarDespesasPorCategoriaNoPeriodo(usuarioId, dataInicio, dataFim);
+    }
+
+    public List<EvolucaoMensalResponse> evolucaoMensal(int ano) {
+        Long usuarioId = usuarioAtualService.obter().getId();
+        if (ano < 1 || ano > 9999) {
+            throw new FiltroTransacaoInvalidoException("O ano deve estar entre 1 e 9999");
+        }
+
+        LocalDate inicioAno = LocalDate.of(ano, 1, 1);
+        Map<Integer, BigDecimal> receitas = new HashMap<>();
+        Map<Integer, BigDecimal> despesas = new HashMap<>();
+        for (TotalMensalPorTipo total : transacaoRepository.somarPorMesETipoNoAno(
+                usuarioId, inicioAno, inicioAno.plusYears(1))) {
+            if (total.tipo() == TipoTransacao.RECEITA) {
+                receitas.put(total.mes(), total.total());
+            } else if (total.tipo() == TipoTransacao.DESPESA) {
+                despesas.put(total.mes(), total.total());
+            }
+        }
+
+        BigDecimal zero = new BigDecimal("0.00");
+        List<EvolucaoMensalResponse> resultado = new ArrayList<>(12);
+        for (int mes = 1; mes <= 12; mes++) {
+            BigDecimal totalReceitas = receitas.getOrDefault(mes, zero);
+            BigDecimal totalDespesas = despesas.getOrDefault(mes, zero);
+            resultado.add(new EvolucaoMensalResponse(ano, mes, totalReceitas,
+                    totalDespesas, totalReceitas.subtract(totalDespesas)));
+        }
+        return resultado;
     }
 
     @Transactional
