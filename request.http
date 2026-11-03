@@ -1,3 +1,34 @@
+### Cadastro de usuario (credenciais ficticias para desenvolvimento)
+POST http://localhost:8080/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Pessoa de exemplo",
+  "email": "pessoa@example.com",
+  "senha": "SenhaFicticia123!"
+}
+
+### Repetir o cadastro acima deve retornar 409
+POST http://localhost:8080/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Outra pessoa",
+  "email": "PESSOA@EXAMPLE.COM",
+  "senha": "OutraSenhaFicticia123!"
+}
+
+### Cadastro invalido: deve retornar 400
+POST http://localhost:8080/usuarios
+Content-Type: application/json
+
+{
+  "nome": "",
+  "email": "invalido",
+  "senha": "curta"
+}
+
+###
 POST http://localhost:8080/transacoes
 Content-Type: application/json
 

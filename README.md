@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal em desenvolvimento, criada como projeto de portfólio para demonstrar desenvolvimento web, modelagem de dados e análise de informações financeiras.
 
-O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST; usuários, interface e publicação serão desenvolvidos nas próximas etapas.
+O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST e cadastro de usuários. Login, separação dos dados por usuário, interface e publicação serão desenvolvidos nas próximas etapas.
 
 ## Tecnologias
 
@@ -13,6 +13,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 
 ## Funcionalidades disponíveis
 
+- Cadastro de usuários com e-mail único e hash da senha usando PBKDF2-HMAC-SHA256, salt aleatório de 16 bytes e 600.000 iterações.
 - Cadastro, listagem, consulta, edição e exclusão de receitas e despesas.
 - Cadastro, listagem, consulta, edição e exclusão de categorias.
 - Associação de cada transação a uma categoria existente.
@@ -78,6 +79,25 @@ Credenciais e configurações locais devem permanecer fora do Git. O [`.gitignor
 
 ## Usar a API
 
+### Cadastrar um usuário
+
+```http
+POST http://localhost:8080/usuarios
+Content-Type: application/json
+
+{
+  "nome": "Pessoa de exemplo",
+  "email": "pessoa@example.com",
+  "senha": "SenhaFicticia123!"
+}
+```
+
+A senha acima é apenas um exemplo. O cadastro exige nome de até 100 caracteres, e-mail válido de até 254 caracteres e senha de 12 a 128 caracteres. Nome e e-mail têm espaços nas pontas removidos; o e-mail é salvo em minúsculas. A senha é preservada exatamente como recebida, inclusive espaços e caracteres Unicode.
+
+O sucesso retorna 201 com apenas `id`, `nome` e `email`. Dados inválidos retornam 400 com mensagens por campo; um e-mail já cadastrado retorna 409 com `{"mensagem":"E-mail já cadastrado"}`. A senha e seu hash não são devolvidos. O cadastro ainda não inicia uma sessão nem restringe o acesso às transações.
+
+### Cadastrar categorias e transações
+
 Os exemplos abaixo podem ser enviados com um cliente HTTP. Primeiro crie uma categoria:
 
 ```http
@@ -110,6 +130,7 @@ O cadastro e a edição de transações recebem `categoriaId`, em vez do nome ou
 
 | Método | Caminho | Finalidade |
 | --- | --- | --- |
+| `POST` | `/usuarios` | Cadastrar usuário |
 | `POST` | `/categorias` | Cadastrar categoria |
 | `GET` | `/categorias` | Listar categorias |
 | `GET` | `/categorias/{id}` | Consultar categoria |
@@ -162,12 +183,13 @@ Em Linux/macOS: `./mvnw clean test`.
 
 Os testes de integração ativam o perfil `test`, configurado em [`application-test.properties`](src/test/resources/application-test.properties), e usam um banco H2 temporário em memória. Não precisam do PostgreSQL nem das variáveis `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. Evite sobrescrever a configuração desse perfil com variáveis `SPRING_DATASOURCE_*` ou `SPRING_JPA_HIBERNATE_DDL_AUTO` no ambiente de testes.
 
-A última execução validada, após a criação do perfil de testes, teve **53 testes aprovados**, sem falhas. Os testes cobrem cenários de categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro e inicialização da aplicação. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
+Os testes cobrem categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro, persistência e cadastro de usuários, hash de senhas e inicialização da aplicação. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
 
 ## Organização do código
 
 ```text
 src/main/java/com/jefferson/fintrack/
+├── config/       # Configuração do hash de senhas
 ├── controller/   # Recebe as requisições HTTP
 ├── dto/          # Define dados de entrada e resultados de consultas
 ├── exception/    # Exceções de domínio e tratamento global de erros
@@ -186,7 +208,8 @@ O objetivo permanece construir uma aplicação web completa. O estado atual não
 - [x] Filtros por período, categoria e tipo.
 - [x] Totais de receitas, despesas e saldo por período.
 - [x] Suíte de testes independente do banco pessoal.
-- [ ] Cadastro e login de usuários, com acesso restrito aos próprios dados.
+- [x] Estrutura e cadastro de usuários, com validação, e-mail único e hash de senhas.
+- [ ] Login de usuários e acesso restrito aos próprios dados.
 - [ ] Gastos por categoria e evolução mensal para o dashboard.
 - [ ] Importação de extratos CSV, com definição do formato e tratamento de linhas inválidas.
 - [ ] Relatórios e definição do formato de exportação.

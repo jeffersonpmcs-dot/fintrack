@@ -12,6 +12,13 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(EmailJaCadastradoException.class)
+    public ResponseEntity<Map<String, String>> tratarEmailJaCadastrado(
+            EmailJaCadastradoException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(Map.of("mensagem", exception.getMessage()));
+    }
+
     @ExceptionHandler(FiltroTransacaoInvalidoException.class)
     public ResponseEntity<Map<String, String>> tratarFiltroTransacaoInvalido(
             FiltroTransacaoInvalidoException exception) {

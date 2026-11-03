@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -14,7 +15,8 @@ import jakarta.validation.constraints.Size;
 import java.util.Locale;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios", uniqueConstraints =
+        @UniqueConstraint(name = "uk_usuarios_email", columnNames = "email"))
 public class Usuario {
 
     @Id
@@ -29,7 +31,7 @@ public class Usuario {
     @NotBlank(message = "O e-mail é obrigatório")
     @Email(message = "O e-mail deve ser válido")
     @Size(max = 254, message = "O e-mail deve ter no máximo 254 caracteres")
-    @Column(nullable = false, unique = true, length = 254)
+    @Column(nullable = false, length = 254)
     private String email;
 
     @JsonIgnore
