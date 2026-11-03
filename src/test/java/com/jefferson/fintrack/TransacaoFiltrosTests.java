@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class TransacaoFiltrosTests {
+class TransacaoFiltrosTests extends ContextoUsuarioTests {
 
     @Autowired
     private TransacaoRepository transacoes;
@@ -141,6 +141,7 @@ class TransacaoFiltrosTests {
     private Categoria criarCategoria(String nome) {
         Categoria categoria = new Categoria();
         categoria.setNome(nome);
+        categoria.setUsuario(usuarioAtual);
         return categorias.save(categoria);
     }
 
@@ -151,6 +152,7 @@ class TransacaoFiltrosTests {
         transacao.setData(LocalDate.parse(data));
         transacao.setTipo(tipo);
         transacao.setCategoria(categoria);
+        transacao.setUsuario(usuarioAtual);
         transacoes.saveAndFlush(transacao);
     }
 }

@@ -30,7 +30,7 @@ class CategoriaAtualizacaoTests {
     void configurar() {
         categorias = mock(CategoriaRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new CategoriaController(
-                        new CategoriaService(categorias, mock(TransacaoRepository.class))))
+                        new CategoriaService(categorias, mock(TransacaoRepository.class), UsuarioAtualMock.criar())))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
@@ -39,7 +39,7 @@ class CategoriaAtualizacaoTests {
         Categoria existente = new Categoria();
         existente.setId(1L);
         existente.setNome("Original");
-        when(categorias.findById(1L)).thenReturn(Optional.of(existente));
+        when(categorias.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(existente));
         when(categorias.save(any(Categoria.class)))
                 .thenAnswer(invocacao -> invocacao.getArgument(0));
 
@@ -58,7 +58,7 @@ class CategoriaAtualizacaoTests {
 
     @Test
     void atualizacaoInexistenteRetorna404SemCriarCategoria() throws Exception {
-        when(categorias.findById(99L)).thenReturn(Optional.empty());
+        when(categorias.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
         mvc.perform(put("/categorias/99").contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nome\":\"Alimentação\"}"))

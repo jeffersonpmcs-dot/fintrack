@@ -26,13 +26,13 @@ class CategoriaBuscaTests {
     void configurar() {
         categorias = mock(CategoriaRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new CategoriaController(
-                        new CategoriaService(categorias, mock(TransacaoRepository.class))))
+                        new CategoriaService(categorias, mock(TransacaoRepository.class), UsuarioAtualMock.criar())))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void buscaInexistenteRetorna404ComMensagem() throws Exception {
-        when(categorias.findById(99L)).thenReturn(Optional.empty());
+        when(categorias.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
         mvc.perform(get("/categorias/99"))
                 .andExpect(status().isNotFound())
@@ -44,7 +44,7 @@ class CategoriaBuscaTests {
         Categoria categoria = new Categoria();
         categoria.setId(1L);
         categoria.setNome("Alimentação");
-        when(categorias.findById(1L)).thenReturn(Optional.of(categoria));
+        when(categorias.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(categoria));
 
         mvc.perform(get("/categorias/1"))
                 .andExpect(status().isOk())

@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal em desenvolvimento, criada como projeto de portfólio para demonstrar desenvolvimento web, modelagem de dados e análise de informações financeiras.
 
-O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro e login com sessão. Separação dos dados por usuário, interface e publicação serão desenvolvidos nas próximas etapas.
+O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro, login com sessão e separação dos dados por usuário. Interface, dashboard visual, CSV e publicação serão desenvolvidos nas próximas etapas.
 
 ## Tecnologias
 
@@ -16,6 +16,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Cadastro de usuários com e-mail único e hash da senha usando PBKDF2-HMAC-SHA256, salt aleatório de 16 bytes e 600.000 iterações.
 - Login com sessão em cookie, consulta do usuário autenticado e logout.
 - Exigência de autenticação nas rotas financeiras e proteção CSRF nas operações de escrita.
+- Categorias e transações privadas por conta, incluindo filtros e resumo financeiro.
 - Cadastro, listagem, consulta, edição e exclusão de receitas e despesas.
 - Cadastro, listagem, consulta, edição e exclusão de categorias.
 - Associação de cada transação a uma categoria existente.
@@ -162,7 +163,15 @@ O logout retorna 204, invalida a sessão e remove o cookie. O cookie está confi
 
 Consultas protegidas sem login retornam 401. Requisições de escrita sem token CSRF válido retornam 403, inclusive antes do login. Sem autenticação, uma escrita com CSRF válido retorna 401.
 
-**Etapa atual:** o login controla o acesso à API, mas os dados financeiros ainda são compartilhados entre as contas autenticadas. O vínculo e a autorização de transações e categorias por usuário são a próxima etapa.
+Cada conta acessa apenas suas próprias categorias e transações. O servidor define o dono a partir da sessão autenticada; os corpos das requisições continuam iguais e não devem enviar `usuario` ou `usuarioId`. O cadastro de categorias também ignora um `id` fornecido no corpo e sempre cria um novo registro. Edições preservam o dono original.
+
+Buscar, editar ou excluir um ID de outra conta retorna o mesmo 404 de um ID inexistente. Uma transação só pode usar categorias da própria conta; categoria de outra conta retorna 404. A filtragem por categoria de outra conta retorna uma lista vazia. O resumo financeiro considera somente transações da conta autenticada.
+
+### Registros anteriores à separação por conta
+
+Na primeira inicialização desta versão com a configuração de desenvolvimento `ddl-auto=update`, o Hibernate acrescenta a coluna `usuario_id` às tabelas `categoria` e `transacao`. Os registros anteriores são preservados com essa coluna nula e ficam fora das consultas, alterações e resumos da API. Uma conta nova começa com listas vazias e totais zero.
+
+As colunas permitem nulo para compatibilidade com esse histórico; todos os cadastros pela API recebem o usuário autenticado. A associação dos dados antigos a uma conta exige uma migração específica, com a conta de destino definida e a consistência entre transações e categorias verificada. Esta versão não atribui automaticamente esses dados a nenhuma conta.
 
 ### Cadastrar categorias e transações
 
@@ -257,7 +266,7 @@ Em Linux/macOS: `./mvnw clean test`.
 
 Os testes de integração ativam o perfil `test`, configurado em [`application-test.properties`](src/test/resources/application-test.properties), e usam um banco H2 temporário em memória. Não precisam do PostgreSQL nem das variáveis `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. Evite sobrescrever a configuração desse perfil com variáveis `SPRING_DATASOURCE_*` ou `SPRING_JPA_HIBERNATE_DDL_AUTO` no ambiente de testes.
 
-Os testes cobrem categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro, persistência e cadastro de usuários, hash de senhas e inicialização da aplicação. Os testes de autenticação usam a cadeia real de filtros do Spring Security com MockMvc, verificando login, renovação da sessão, CSRF, acesso às rotas e logout. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
+Os testes cobrem categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro, persistência e cadastro de usuários, hash de senhas e inicialização da aplicação. Os testes de autenticação e isolamento usam a cadeia real de filtros do Spring Security com MockMvc, verificando login, renovação da sessão, CSRF, logout e acesso entre duas contas. Também verificam tentativas de editar ou excluir dados alheios, forjar o dono, usar categoria de outra conta e acessar registros antigos sem dono. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
 
 ## Organização do código
 
@@ -276,7 +285,7 @@ O fluxo principal é `Controller → Service → Repository → PostgreSQL`, com
 
 ## Roteiro do projeto
 
-O objetivo permanece construir uma aplicação web completa. O estado atual inclui autenticação por sessão; a separação dos dados financeiros por usuário ainda está pendente.
+O objetivo permanece construir uma aplicação web completa. O estado atual inclui autenticação por sessão e separação dos dados financeiros por usuário.
 
 - [x] Núcleo da API: transações, categorias, validações e tratamento de registros inexistentes.
 - [x] Filtros por período, categoria e tipo.
@@ -284,7 +293,7 @@ O objetivo permanece construir uma aplicação web completa. O estado atual incl
 - [x] Suíte de testes independente do banco pessoal.
 - [x] Estrutura e cadastro de usuários, com validação, e-mail único e hash de senhas.
 - [x] Login por sessão, consulta da conta autenticada, CSRF e logout.
-- [ ] Vínculo dos dados e autorização de acesso por usuário.
+- [x] Vínculo dos dados e autorização de acesso por usuário.
 - [ ] Gastos por categoria e evolução mensal para o dashboard.
 - [ ] Importação de extratos CSV, com definição do formato e tratamento de linhas inválidas.
 - [ ] Relatórios e definição do formato de exportação.

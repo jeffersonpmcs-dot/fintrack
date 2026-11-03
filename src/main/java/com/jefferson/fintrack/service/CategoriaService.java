@@ -12,30 +12,39 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
     private final TransacaoRepository transacaoRepository;
+    private final UsuarioAtualService usuarioAtualService;
 
     public CategoriaService(CategoriaRepository categoriaRepository,
-                            TransacaoRepository transacaoRepository) {
+                            TransacaoRepository transacaoRepository,
+                            UsuarioAtualService usuarioAtualService) {
         this.categoriaRepository = categoriaRepository;
         this.transacaoRepository = transacaoRepository;
+        this.usuarioAtualService = usuarioAtualService;
     }
 
+    @Transactional
     public Categoria salvar(Categoria categoria) {
-        return categoriaRepository.save(categoria);
+        Categoria nova = new Categoria();
+        nova.setNome(categoria.getNome());
+        nova.setUsuario(usuarioAtualService.obter());
+        return categoriaRepository.save(nova);
     }
 
     public List<Categoria> listarTodas() {
-        return categoriaRepository.findAll();
+        return categoriaRepository.findAllByUsuarioId(usuarioAtualService.obter().getId());
     }
 
     public Categoria buscarPorId(Long id) {
-        return categoriaRepository.findById(id)
+        return categoriaRepository.findByIdAndUsuarioId(id, usuarioAtualService.obter().getId())
                 .orElseThrow(CategoriaNaoEncontradaException::new);
     }
 
+    @Transactional
     public Categoria atualizar(Long id, Categoria categoria) {
         Categoria categoriaExistente = buscarPorId(id);
         categoriaExistente.setNome(categoria.getNome());

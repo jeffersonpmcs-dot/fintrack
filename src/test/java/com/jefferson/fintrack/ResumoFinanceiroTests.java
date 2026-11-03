@@ -30,7 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class ResumoFinanceiroTests {
+class ResumoFinanceiroTests extends ContextoUsuarioTests {
 
     @Autowired
     private TransacaoRepository transacoes;
@@ -48,6 +48,7 @@ class ResumoFinanceiroTests {
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
         categoria = new Categoria();
         categoria.setNome("Teste de resumo");
+        categoria.setUsuario(usuarioAtual);
         categoria = categorias.save(categoria);
         criarTransacao("2026-09-30", TipoTransacao.DESPESA, "100.00");
         criarTransacao("2026-10-01", TipoTransacao.RECEITA, "1000.10");
@@ -141,6 +142,7 @@ class ResumoFinanceiroTests {
         transacao.setTipo(tipo);
         transacao.setValor(new BigDecimal(valor));
         transacao.setCategoria(categoria);
+        transacao.setUsuario(usuarioAtual);
         transacoes.saveAndFlush(transacao);
     }
 }

@@ -36,13 +36,13 @@ class TransacaoCategoriaTests {
         transacoes = mock(TransacaoRepository.class);
         categorias = mock(CategoriaRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new TransacaoController(
-                        new TransacaoService(transacoes, categorias)))
+                        new TransacaoService(transacoes, categorias, UsuarioAtualMock.criar())))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void cadastroComCategoriaInexistenteRetorna404SemSalvar() throws Exception {
-        when(categorias.findById(999L)).thenReturn(Optional.empty());
+        when(categorias.findByIdAndUsuarioId(999L, 1L)).thenReturn(Optional.empty());
         mvc.perform(post("/transacoes").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Categoria não encontrada"));
@@ -53,8 +53,8 @@ class TransacaoCategoriaTests {
     void atualizacaoComCategoriaInexistenteRetorna404SemAlterarOuSalvar() throws Exception {
         Transacao existente = new Transacao();
         existente.setDescricao("Original");
-        when(transacoes.findById(1L)).thenReturn(Optional.of(existente));
-        when(categorias.findById(999L)).thenReturn(Optional.empty());
+        when(transacoes.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(existente));
+        when(categorias.findByIdAndUsuarioId(999L, 1L)).thenReturn(Optional.empty());
         mvc.perform(put("/transacoes/1").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Categoria não encontrada"));
@@ -64,7 +64,7 @@ class TransacaoCategoriaTests {
 
     @Test
     void cadastroComCategoriaExistenteContinuaRetornando201() throws Exception {
-        when(categorias.findById(999L)).thenReturn(Optional.of(new Categoria()));
+        when(categorias.findByIdAndUsuarioId(999L, 1L)).thenReturn(Optional.of(new Categoria()));
         when(transacoes.save(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
         mvc.perform(post("/transacoes").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
                 .andExpect(status().isCreated())
@@ -74,8 +74,8 @@ class TransacaoCategoriaTests {
 
     @Test
     void atualizacaoComCategoriaExistenteContinuaRetornando200() throws Exception {
-        when(transacoes.findById(1L)).thenReturn(Optional.of(new Transacao()));
-        when(categorias.findById(999L)).thenReturn(Optional.of(new Categoria()));
+        when(transacoes.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(new Transacao()));
+        when(categorias.findByIdAndUsuarioId(999L, 1L)).thenReturn(Optional.of(new Categoria()));
         when(transacoes.save(any())).thenAnswer(invocacao -> invocacao.getArgument(0));
         mvc.perform(put("/transacoes/1").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
                 .andExpect(status().isOk())
@@ -85,7 +85,7 @@ class TransacaoCategoriaTests {
 
     @Test
     void transacaoInexistenteContinuaRetornando404() throws Exception {
-        when(transacoes.findById(1L)).thenReturn(Optional.empty());
+        when(transacoes.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.empty());
         mvc.perform(put("/transacoes/1").contentType(MediaType.APPLICATION_JSON).content(REQUEST))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Transação não encontrada"));

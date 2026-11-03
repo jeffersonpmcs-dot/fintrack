@@ -30,7 +30,7 @@ class CategoriaExclusaoTests {
         categorias = mock(CategoriaRepository.class);
         transacoes = mock(TransacaoRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new CategoriaController(
-                        new CategoriaService(categorias, transacoes)))
+                        new CategoriaService(categorias, transacoes, UsuarioAtualMock.criar())))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
@@ -38,7 +38,7 @@ class CategoriaExclusaoTests {
     void exclusaoSemTransacoesRetorna204() throws Exception {
         Categoria categoria = new Categoria();
         categoria.setId(1L);
-        when(categorias.findById(1L)).thenReturn(Optional.of(categoria));
+        when(categorias.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(categoria));
         when(transacoes.existsByCategoriaId(1L)).thenReturn(false);
 
         mvc.perform(delete("/categorias/1"))
@@ -51,7 +51,7 @@ class CategoriaExclusaoTests {
 
     @Test
     void exclusaoInexistenteRetorna404SemExcluir() throws Exception {
-        when(categorias.findById(99L)).thenReturn(Optional.empty());
+        when(categorias.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
 
         mvc.perform(delete("/categorias/99"))
                 .andExpect(status().isNotFound())
@@ -64,7 +64,7 @@ class CategoriaExclusaoTests {
 
     @Test
     void exclusaoComTransacoesRetorna409SemExcluir() throws Exception {
-        when(categorias.findById(1L)).thenReturn(Optional.of(new Categoria()));
+        when(categorias.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(new Categoria()));
         when(transacoes.existsByCategoriaId(1L)).thenReturn(true);
 
         mvc.perform(delete("/categorias/1"))
@@ -79,7 +79,7 @@ class CategoriaExclusaoTests {
 
     @Test
     void vinculoDetectadoPeloBancoTambemRetorna409() throws Exception {
-        when(categorias.findById(1L)).thenReturn(Optional.of(new Categoria()));
+        when(categorias.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(new Categoria()));
         when(transacoes.existsByCategoriaId(1L)).thenReturn(false);
         doThrow(new DataIntegrityViolationException("Restrição de chave estrangeira"))
                 .when(categorias).flush();

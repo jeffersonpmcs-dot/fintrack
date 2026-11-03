@@ -27,13 +27,13 @@ class TransacaoNaoEncontradaTests {
         transacoes = mock(TransacaoRepository.class);
         CategoriaRepository categorias = mock(CategoriaRepository.class);
         mvc = MockMvcBuilders.standaloneSetup(new TransacaoController(
-                        new TransacaoService(transacoes, categorias)))
+                        new TransacaoService(transacoes, categorias, UsuarioAtualMock.criar())))
                 .setControllerAdvice(new GlobalExceptionHandler()).build();
     }
 
     @Test
     void buscaInexistenteRetorna404ComMensagem() throws Exception {
-        when(transacoes.findById(99L)).thenReturn(Optional.empty());
+        when(transacoes.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
         mvc.perform(get("/transacoes/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Transação não encontrada"));
@@ -41,7 +41,7 @@ class TransacaoNaoEncontradaTests {
 
     @Test
     void exclusaoInexistenteRetorna404SemExcluir() throws Exception {
-        when(transacoes.findById(99L)).thenReturn(Optional.empty());
+        when(transacoes.findByIdAndUsuarioId(99L, 1L)).thenReturn(Optional.empty());
         mvc.perform(delete("/transacoes/99"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.mensagem").value("Transação não encontrada"));
@@ -54,7 +54,7 @@ class TransacaoNaoEncontradaTests {
         Transacao transacao = new Transacao();
         transacao.setId(1L);
         transacao.setDescricao("Supermercado");
-        when(transacoes.findById(1L)).thenReturn(Optional.of(transacao));
+        when(transacoes.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(transacao));
         mvc.perform(get("/transacoes/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -64,11 +64,11 @@ class TransacaoNaoEncontradaTests {
     @Test
     void exclusaoExistenteContinuaRetornando204() throws Exception {
         Transacao transacao = new Transacao();
-        when(transacoes.findById(1L)).thenReturn(Optional.of(transacao));
+        when(transacoes.findByIdAndUsuarioId(1L, 1L)).thenReturn(Optional.of(transacao));
         mvc.perform(delete("/transacoes/1"))
                 .andExpect(status().isNoContent())
                 .andExpect(content().string(""));
         verify(transacoes).delete(transacao);
-        verify(transacoes, times(1)).findById(1L);
+        verify(transacoes, times(1)).findByIdAndUsuarioId(1L, 1L);
     }
 }
