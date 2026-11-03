@@ -23,6 +23,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Bloqueio da exclusão de categorias com transações vinculadas.
 - Filtros combináveis por período, categoria e tipo (`RECEITA` ou `DESPESA`).
 - Resumo financeiro com total de receitas, total de despesas e saldo por período.
+- Gastos por categoria no período, ordenados do maior para o menor e restritos à conta autenticada.
 - Validação de campos obrigatórios e valores positivos.
 - Respostas 404 para categorias ou transações inexistentes e 409 para categoria em uso.
 
@@ -225,6 +226,7 @@ O cadastro e a edição de transações recebem `categoriaId`, em vez do nome ou
 | `PUT` | `/transacoes/{id}` | Atualizar transação |
 | `DELETE` | `/transacoes/{id}` | Excluir transação |
 | `GET` | `/transacoes/resumo` | Consultar receitas, despesas e saldo |
+| `GET` | `/transacoes/gastos-por-categoria` | Consultar despesas agrupadas por categoria |
 
 Cadastros retornam 201, consultas e atualizações retornam 200, e exclusões bem-sucedidas retornam 204 sem corpo.
 
@@ -251,6 +253,27 @@ O resumo aceita apenas os filtros opcionais `dataInicio` e `dataFim`. Exemplo de
 ```
 
 O saldo é calculado como receitas menos despesas. Sem datas, o resumo considera todo o histórico; sem transações no período, os três valores são zero. Uma data inicial posterior à final retorna 400.
+
+### Gastos por categoria
+
+Com a sessão autenticada, consulte:
+
+```http
+GET http://localhost:8080/transacoes/gastos-por-categoria?dataInicio=2026-11-01&dataFim=2026-11-30
+```
+
+Exemplo de resposta:
+
+```json
+[
+  { "categoriaId": 1, "categoriaNome": "Alimentação", "totalDespesas": 120.30 },
+  { "categoriaId": 2, "categoriaNome": "Transporte", "totalDespesas": 50.00 }
+]
+```
+
+Os dois filtros de data são opcionais e inclusivos; sem datas, a consulta considera todo o histórico da conta. Apenas despesas são somadas. Categorias sem despesas no período não aparecem, e uma consulta sem despesas retorna `[]`. Categorias com nomes iguais continuam separadas pelo ID.
+
+O resultado é ordenado por total decrescente, depois por nome e ID crescentes para desempate. Os valores usam `BigDecimal`. Datas invertidas ou malformadas retornam 400; consultas sem login retornam 401. A consulta verifica tanto o dono da transação quanto o da categoria e exclui registros antigos sem dono. Esta rota fornece dados para o futuro dashboard; a interface visual ainda está pendente.
 
 O arquivo [`request.http`](request.http) registra exemplos usados durante o desenvolvimento. Ele ainda contém requisições antigas com `categoria` no corpo; para criar ou editar transações, siga o formato atual com `categoriaId` apresentado acima.
 
@@ -294,7 +317,8 @@ O objetivo permanece construir uma aplicação web completa. O estado atual incl
 - [x] Estrutura e cadastro de usuários, com validação, e-mail único e hash de senhas.
 - [x] Login por sessão, consulta da conta autenticada, CSRF e logout.
 - [x] Vínculo dos dados e autorização de acesso por usuário.
-- [ ] Gastos por categoria e evolução mensal para o dashboard.
+- [x] Consulta de gastos por categoria para o dashboard.
+- [ ] Evolução mensal para o dashboard.
 - [ ] Importação de extratos CSV, com definição do formato e tratamento de linhas inválidas.
 - [ ] Relatórios e definição do formato de exportação.
 - [ ] Frontend com HTML, CSS e JavaScript, incluindo dashboard e gráficos.

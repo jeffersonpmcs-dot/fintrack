@@ -213,6 +213,18 @@ GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&ca
 
 ### Periodo invalido: deve retornar 400
 GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01
+### Gastos por categoria no periodo inclusivo (requer login e cookie de sessao)
+GET http://localhost:8080/transacoes/gastos-por-categoria?dataInicio=2026-11-01&dataFim=2026-11-30
+
+### Gastos por categoria em todo o historico da conta
+GET http://localhost:8080/transacoes/gastos-por-categoria
+
+### Gastos por categoria a partir de uma data
+GET http://localhost:8080/transacoes/gastos-por-categoria?dataInicio=2026-11-01
+
+### Gastos por categoria com periodo invalido: deve retornar 400
+GET http://localhost:8080/transacoes/gastos-por-categoria?dataInicio=2026-11-30&dataFim=2026-11-01
+
 ### Resumo financeiro por periodo inclusivo
 GET http://localhost:8080/transacoes/resumo?dataInicio=2026-10-01&dataFim=2026-10-31
 

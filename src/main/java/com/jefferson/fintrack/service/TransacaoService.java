@@ -1,6 +1,7 @@
 package com.jefferson.fintrack.service;
 
 import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
+import com.jefferson.fintrack.dto.GastoPorCategoriaResponse;
 import com.jefferson.fintrack.dto.TotalPorTipo;
 import com.jefferson.fintrack.dto.TransacaoRequest;
 import com.jefferson.fintrack.exception.CategoriaNaoEncontradaException;
@@ -100,6 +101,12 @@ public class TransacaoService {
         }
         return new ResumoFinanceiroResponse(
                 totalReceitas, totalDespesas, totalReceitas.subtract(totalDespesas));
+    }
+
+    public List<GastoPorCategoriaResponse> gastosPorCategoria(LocalDate dataInicio, LocalDate dataFim) {
+        Long usuarioId = usuarioAtualService.obter().getId();
+        validarPeriodo(dataInicio, dataFim);
+        return transacaoRepository.somarDespesasPorCategoriaNoPeriodo(usuarioId, dataInicio, dataFim);
     }
 
     @Transactional

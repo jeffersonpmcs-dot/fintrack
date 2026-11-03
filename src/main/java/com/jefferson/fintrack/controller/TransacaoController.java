@@ -2,6 +2,7 @@ package com.jefferson.fintrack.controller;
 
 import com.jefferson.fintrack.dto.TransacaoRequest;
 import com.jefferson.fintrack.dto.ResumoFinanceiroResponse;
+import com.jefferson.fintrack.dto.GastoPorCategoriaResponse;
 import com.jefferson.fintrack.model.Transacao;
 import com.jefferson.fintrack.model.TipoTransacao;
 import com.jefferson.fintrack.service.TransacaoService;
@@ -50,6 +51,15 @@ public class TransacaoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate dataFim) {
         return transacaoService.resumir(dataInicio, dataFim);
+    }
+
+    @GetMapping("/gastos-por-categoria")
+    public List<GastoPorCategoriaResponse> gastosPorCategoria(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataInicio,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate dataFim) {
+        return transacaoService.gastosPorCategoria(dataInicio, dataFim);
     }
 
     @GetMapping("/{id}")
