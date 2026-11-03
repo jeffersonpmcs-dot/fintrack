@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal em desenvolvimento, criada como projeto de portfólio para demonstrar desenvolvimento web, modelagem de dados e análise de informações financeiras.
 
-O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro, login com sessão e separação dos dados por usuário. Interface, dashboard visual, CSV e publicação serão desenvolvidos nas próximas etapas.
+O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro, login com sessão, separação dos dados por usuário, dados para o dashboard e importação CSV no formato do FinTrack. Interface, dashboard visual e publicação serão desenvolvidos nas próximas etapas.
 
 ## Tecnologias
 
@@ -10,6 +10,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Spring Boot 4.1.1, Spring Web MVC e Jakarta Validation.
 - Spring Data JPA / Hibernate e PostgreSQL.
 - JUnit e Mockito nos testes; H2 em memória nos testes de integração.
+- [Apache Commons CSV](https://commons.apache.org/proper/commons-csv/) para leitura de arquivos CSV.
 
 ## Funcionalidades disponíveis
 
@@ -25,6 +26,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Resumo financeiro com total de receitas, total de despesas e saldo por período.
 - Gastos por categoria no período, ordenados do maior para o menor e restritos à conta autenticada.
 - Evolução mensal de receitas, despesas e saldo, com os 12 meses do ano escolhido.
+- Importação CSV de receitas e despesas, com validação completa e gravação de todo o arquivo em uma transação.
 - Validação de campos obrigatórios e valores positivos.
 - Respostas 404 para categorias ou transações inexistentes e 409 para categoria em uso.
 
@@ -222,6 +224,7 @@ O cadastro e a edição de transações recebem `categoriaId`, em vez do nome ou
 | `PUT` | `/categorias/{id}` | Atualizar o nome da categoria |
 | `DELETE` | `/categorias/{id}` | Excluir categoria sem transações vinculadas |
 | `POST` | `/transacoes` | Cadastrar transação |
+| `POST` | `/transacoes/importar-csv` | Importar um arquivo CSV da conta autenticada |
 | `GET` | `/transacoes` | Listar ou filtrar transações |
 | `GET` | `/transacoes/{id}` | Consultar transação |
 | `PUT` | `/transacoes/{id}` | Atualizar transação |
@@ -301,6 +304,48 @@ O parâmetro `ano` é obrigatório e aceita inteiros de 1 a 9999. Ano ausente, i
 
 Meses sem movimento têm os três valores financeiros iguais a zero. Um ano inteiro sem transações também retorna os 12 meses zerados. O saldo é o resultado daquele mês (`receitas - despesas`), sem carregar o saldo dos meses ou anos anteriores. As somas usam `BigDecimal` e são agrupadas no banco. A soma dos meses corresponde ao resumo financeiro do mesmo ano. O gráfico visual será construído junto com o frontend.
 
+### Importar transações por CSV
+
+A primeira versão usa um formato padronizado do FinTrack. Extratos de bancos com outro layout precisam ser convertidos para este formato antes do envio.
+
+```csv
+descricao;valor;data;tipo;categoriaId
+Salário;3500.00;2026-11-03;RECEITA;1
+"Supermercado; compra mensal";187.50;2026-11-03;DESPESA;2
+```
+
+Use o [arquivo de exemplo](exemplos/importacao.csv) e substitua os IDs por categorias existentes na sua conta. A importação utiliza as categorias informadas; ela não cria categorias automaticamente.
+
+| Campo | Regra |
+| --- | --- |
+| `descricao` | Obrigatória, até 255 caracteres; espaços nas pontas são removidos |
+| `valor` | Positivo, ponto decimal, até 15 dígitos inteiros e 2 decimais; sem separador de milhar ou notação científica |
+| `data` | Data válida em `AAAA-MM-DD`, com ano entre 1 e 9999 |
+| `tipo` | Exatamente `RECEITA` ou `DESPESA` |
+| `categoriaId` | Inteiro positivo; categoria existente e pertencente à conta autenticada |
+
+O cabeçalho deve conter exatamente essas cinco colunas, nessa ordem e com esses nomes. Use UTF-8, com ou sem BOM, separador `;` e quebras de linha LF ou CRLF. Descrições com `;`, aspas ou quebras de linha devem estar entre aspas duplas; aspas dentro do texto são escapadas como `""`. Linhas vazias intermediárias são rejeitadas.
+
+Envie `POST /transacoes/importar-csv` como `multipart/form-data`, com o campo de arquivo chamado `arquivo`, o cookie da sessão e o cabeçalho CSRF atual. Há uma requisição multipart pronta no [`request.http`](request.http). O limite é de **1 MB (1.048.576 bytes)** e **1.000 transações por arquivo**, além do cabeçalho. O upload multipart completo tem limite de 2 MB.
+
+Sucesso retorna 201 com:
+
+```json
+{ "totalImportadas": 2 }
+```
+
+Todos os registros e suas categorias são validados antes da gravação. Um arquivo inválido retorna 400 com o primeiro erro identificado e não grava nenhuma transação. Exemplo:
+
+```json
+{ "linha": 3, "mensagem": "Categoria não encontrada para esta conta" }
+```
+
+`linha` é o número do registro lógico no CSV: cabeçalho = 1, primeira transação = 2. Um campo entre aspas com quebra de linha continua sendo um único registro. Categorias inexistentes, sem dono ou pertencentes a outra conta recebem a mesma mensagem.
+
+Um upload acima do limite retorna 413. Conflitos de integridade durante a gravação retornam 409 e desfazem a importação inteira, inclusive transações já inseridas naquela tentativa. Login e CSRF são obrigatórios. O nome do arquivo e campos externos não definem o usuário: o dono sempre vem da sessão.
+
+**Reenvio:** cada envio válido cria novas transações. Esta versão não faz deduplicação; reenviar o mesmo arquivo duplica seus lançamentos. Confira o arquivo antes de confirmar o envio.
+
 O arquivo [`request.http`](request.http) registra exemplos usados durante o desenvolvimento. Ele ainda contém requisições antigas com `categoria` no corpo; para criar ou editar transações, siga o formato atual com `categoriaId` apresentado acima.
 
 ## Executar os testes
@@ -315,7 +360,7 @@ Em Linux/macOS: `./mvnw clean test`.
 
 Os testes de integração ativam o perfil `test`, configurado em [`application-test.properties`](src/test/resources/application-test.properties), e usam um banco H2 temporário em memória. Não precisam do PostgreSQL nem das variáveis `DB_URL`, `DB_USERNAME` e `DB_PASSWORD`. Evite sobrescrever a configuração desse perfil com variáveis `SPRING_DATASOURCE_*` ou `SPRING_JPA_HIBERNATE_DDL_AUTO` no ambiente de testes.
 
-Os testes cobrem categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro, persistência e cadastro de usuários, hash de senhas e inicialização da aplicação. Os testes de autenticação e isolamento usam a cadeia real de filtros do Spring Security com MockMvc, verificando login, renovação da sessão, CSRF, logout e acesso entre duas contas. Também verificam tentativas de editar ou excluir dados alheios, forjar o dono, usar categoria de outra conta e acessar registros antigos sem dono. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
+Os testes cobrem categorias, transações inexistentes, associação de categorias, filtros, resumo financeiro, persistência e cadastro de usuários, hash de senhas e inicialização da aplicação. Os testes de autenticação e isolamento usam a cadeia real de filtros do Spring Security com MockMvc, verificando login, renovação da sessão, CSRF, logout e acesso entre duas contas. Também verificam tentativas de editar ou excluir dados alheios, forjar o dono, usar categoria de outra conta e acessar registros antigos sem dono. Os testes de CSV cobrem formato, codificação, limites, validação e atomicidade. O teste de rollback provoca uma falha real de integridade no H2 e verifica que a primeira linha também foi desfeita, sem uma transação externa de teste. A validação específica com PostgreSQL continua sendo necessária antes da publicação.
 
 ## Organização do código
 
@@ -345,7 +390,7 @@ O objetivo permanece construir uma aplicação web completa. O estado atual incl
 - [x] Vínculo dos dados e autorização de acesso por usuário.
 - [x] Consulta de gastos por categoria para o dashboard.
 - [x] Consulta de evolução mensal para o dashboard.
-- [ ] Importação de extratos CSV, com definição do formato e tratamento de linhas inválidas.
+- [x] Importação CSV no formato do FinTrack, com validação e gravação integral.
 - [ ] Relatórios e definição do formato de exportação.
 - [ ] Frontend com HTML, CSS e JavaScript, incluindo dashboard e gráficos.
 - [ ] Documentação formal da API e revisão dos exemplos HTTP antigos.

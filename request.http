@@ -213,6 +213,19 @@ GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&ca
 
 ### Periodo invalido: deve retornar 400
 GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01
+### Importacao CSV: ajuste os IDs em exemplos/importacao.csv para categorias da sua conta.
+# Requer login e csrfToken atualizado. Cada envio valido cria novas transacoes.
+POST http://localhost:8080/transacoes/importar-csv
+Content-Type: multipart/form-data; boundary=FinTrackCsvBoundary
+X-CSRF-TOKEN: {{csrfToken}}
+
+--FinTrackCsvBoundary
+Content-Disposition: form-data; name="arquivo"; filename="importacao.csv"
+Content-Type: text/csv; charset=UTF-8
+
+< ./exemplos/importacao.csv
+--FinTrackCsvBoundary--
+
 ### Evolucao mensal: 12 meses do ano, com receitas, despesas e saldo (requer login)
 GET http://localhost:8080/transacoes/evolucao-mensal?ano=2026
 
