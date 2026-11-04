@@ -213,6 +213,18 @@ GET http://localhost:8080/transacoes?dataInicio=2026-10-01&dataFim=2026-10-31&ca
 
 ### Periodo invalido: deve retornar 400
 GET http://localhost:8080/transacoes?dataInicio=2026-10-31&dataFim=2026-10-01
+### Exportar CSV de todo o historico elegivel da conta (requer login; maximo de 1000 transacoes)
+GET http://localhost:8080/transacoes/exportar-csv
+
+### Exportar despesas no periodo inclusivo
+GET http://localhost:8080/transacoes/exportar-csv?dataInicio=2026-11-01&dataFim=2026-11-30&tipo=DESPESA
+
+### Combinar categoria, periodo e tipo (ajuste o ID para sua conta)
+GET http://localhost:8080/transacoes/exportar-csv?dataInicio=2026-11-01&dataFim=2026-11-30&categoriaId=1&tipo=DESPESA
+
+### Exportacao com periodo invalido: deve retornar 400
+GET http://localhost:8080/transacoes/exportar-csv?dataInicio=2026-11-30&dataFim=2026-11-01
+
 ### Importacao CSV: ajuste os IDs em exemplos/importacao.csv para categorias da sua conta.
 # Requer login e csrfToken atualizado. Cada envio valido cria novas transacoes.
 POST http://localhost:8080/transacoes/importar-csv

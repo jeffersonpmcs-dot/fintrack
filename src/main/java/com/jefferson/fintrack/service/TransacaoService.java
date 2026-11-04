@@ -18,6 +18,9 @@ import com.jefferson.fintrack.repository.TransacaoRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -59,15 +62,33 @@ public class TransacaoService {
     public List<Transacao> listar(LocalDate dataInicio, LocalDate dataFim,
                                  Long categoriaId, TipoTransacao tipo) {
         Long usuarioId = usuarioAtualService.obter().getId();
-        validarPeriodo(dataInicio, dataFim);
-        if (categoriaId != null && categoriaId <= 0) {
-            throw new FiltroTransacaoInvalidoException("O ID da categoria deve ser maior que zero");
-        }
+        validarFiltros(dataInicio, dataFim, categoriaId);
         if (dataInicio == null && dataFim == null && categoriaId == null && tipo == null) {
             return transacaoRepository.findAllByUsuarioId(usuarioId);
         }
 
-        return transacaoRepository.findAll((root, query, builder) -> {
+        return transacaoRepository.findAll(criarFiltros(usuarioId, dataInicio, dataFim, categoriaId, tipo));
+    }
+
+    public List<Transacao> listarParaExportacao(LocalDate dataInicio, LocalDate dataFim,
+                                              Long categoriaId, TipoTransacao tipo) {
+        Long usuarioId = usuarioAtualService.obter().getId();
+        validarFiltros(dataInicio, dataFim, categoriaId);
+        Specification<Transacao> filtros = criarFiltros(usuarioId, dataInicio, dataFim, categoriaId, tipo)
+                .and((root, query, builder) ->
+                        builder.equal(root.get("categoria").get("usuario").get("id"), usuarioId));
+        var pagina = transacaoRepository.findAll(filtros,
+                PageRequest.of(0, 1000, Sort.by("data", "id")));
+        if (pagina.hasNext()) {
+            throw new FiltroTransacaoInvalidoException(
+                    "A exportação permite até 1000 transações. Ajuste os filtros");
+        }
+        return pagina.getContent();
+    }
+
+    private Specification<Transacao> criarFiltros(Long usuarioId, LocalDate dataInicio, LocalDate dataFim,
+                                                 Long categoriaId, TipoTransacao tipo) {
+        return (root, query, builder) -> {
             List<Predicate> filtros = new ArrayList<>();
             filtros.add(builder.equal(root.get("usuario").get("id"), usuarioId));
             if (dataInicio != null) {
@@ -83,7 +104,7 @@ public class TransacaoService {
                 filtros.add(builder.equal(root.get("tipo"), tipo));
             }
             return builder.and(filtros.toArray(Predicate[]::new));
-        });
+        };
     }
 
     public Transacao buscarPorId(Long id) {
@@ -178,6 +199,13 @@ public class TransacaoService {
     private void validarPeriodo(LocalDate dataInicio, LocalDate dataFim) {
         if (dataInicio != null && dataFim != null && dataInicio.isAfter(dataFim)) {
             throw new FiltroTransacaoInvalidoException("A data inicial não pode ser posterior à data final");
+        }
+    }
+
+    private void validarFiltros(LocalDate dataInicio, LocalDate dataFim, Long categoriaId) {
+        validarPeriodo(dataInicio, dataFim);
+        if (categoriaId != null && categoriaId <= 0) {
+            throw new FiltroTransacaoInvalidoException("O ID da categoria deve ser maior que zero");
         }
     }
 }

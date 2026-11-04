@@ -2,7 +2,7 @@
 
 Aplicação de gestão financeira pessoal em desenvolvimento, criada como projeto de portfólio para demonstrar desenvolvimento web, modelagem de dados e análise de informações financeiras.
 
-O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro, login com sessão, separação dos dados por usuário, dados para o dashboard e importação CSV no formato do FinTrack. Interface, dashboard visual e publicação serão desenvolvidos nas próximas etapas.
+O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas e despesas, importe extratos CSV e acompanhe sua situação financeira por dashboards e relatórios. Atualmente, o projeto oferece o núcleo da API REST, cadastro, login com sessão, separação dos dados por usuário, dados para o dashboard e importação e exportação CSV. Interface, dashboard visual e publicação serão desenvolvidos nas próximas etapas.
 
 ## Tecnologias
 
@@ -27,6 +27,7 @@ O objetivo final é permitir que cada pessoa tenha sua conta, registre receitas 
 - Gastos por categoria no período, ordenados do maior para o menor e restritos à conta autenticada.
 - Evolução mensal de receitas, despesas e saldo, com os 12 meses do ano escolhido.
 - Importação CSV de receitas e despesas, com validação completa e gravação de todo o arquivo em uma transação.
+- Exportação CSV da conta autenticada, com filtros de período, categoria e tipo.
 - Validação de campos obrigatórios e valores positivos.
 - Respostas 404 para categorias ou transações inexistentes e 409 para categoria em uso.
 
@@ -225,6 +226,7 @@ O cadastro e a edição de transações recebem `categoriaId`, em vez do nome ou
 | `DELETE` | `/categorias/{id}` | Excluir categoria sem transações vinculadas |
 | `POST` | `/transacoes` | Cadastrar transação |
 | `POST` | `/transacoes/importar-csv` | Importar um arquivo CSV da conta autenticada |
+| `GET` | `/transacoes/exportar-csv` | Baixar transações filtradas em CSV |
 | `GET` | `/transacoes` | Listar ou filtrar transações |
 | `GET` | `/transacoes/{id}` | Consultar transação |
 | `PUT` | `/transacoes/{id}` | Atualizar transação |
@@ -346,6 +348,24 @@ Um upload acima do limite retorna 413. Conflitos de integridade durante a grava�
 
 **Reenvio:** cada envio válido cria novas transações. Esta versão não faz deduplicação; reenviar o mesmo arquivo duplica seus lançamentos. Confira o arquivo antes de confirmar o envio.
 
+### Exportar transações em CSV
+
+Com a sessão autenticada, solicite o download:
+
+```http
+GET http://localhost:8080/transacoes/exportar-csv?dataInicio=2026-11-01&dataFim=2026-11-30&tipo=DESPESA
+```
+
+Os filtros opcionais são `dataInicio`, `dataFim`, `categoriaId` e `tipo`, com as mesmas regras da listagem de transações. Datas são inclusivas. Sem filtros, a exportação considera todo o histórico elegível da conta. A consulta verifica o dono da transação e da categoria; registros sem dono ou vinculados a categorias de outra conta ficam fora. Filtrar por categoria de outra conta retorna um arquivo com apenas o cabeçalho.
+
+O sucesso retorna 200, `Content-Type: text/csv;charset=UTF-8`, `Content-Disposition: attachment; filename="transacoes.csv"` e `Cache-Control: no-store`. O arquivo usa UTF-8 com BOM, separador `;`, quebras de registro CRLF e todos os campos entre aspas duplas. O cabeçalho contém `descricao`, `valor`, `data`, `tipo` e `categoriaId`, na mesma ordem da importação. Valores monetários são escritos com ponto decimal, sem arredondamento nem notação científica. As linhas são ordenadas por data e depois por ID crescentes.
+
+Cada download aceita até **1.000 transações**. Se os filtros selecionarem mais registros, a API retorna 400 pedindo filtros mais restritos; o resultado não é truncado. A busca usa paginação no banco para limitar os registros carregados. Sem correspondências, retorna 200 com um CSV contendo apenas o cabeçalho. Filtros inválidos retornam 400, e consultas sem login retornam 401. Esta operação é uma leitura e não exige token CSRF.
+
+Descrições com prefixos que possam ser interpretados como fórmulas recebem um tab inicial dentro do campo entre aspas, incluindo prefixos após espaços ou controles. Aspas, separadores e quebras de linha dentro do texto são escapados pelo Apache Commons CSV. O texto no banco permanece igual. Essa proteção segue a abordagem voltada ao Excel descrita pela [OWASP](https://community.owasp.org/attacks/CSV_Injection); o comportamento de outros editores pode variar.
+
+O tab de proteção faz parte do arquivo. Na reimportação, ele é removido pela normalização de espaços já existente no importador. Permanecem aplicáveis todas as regras da importação, como limites de valores, datas, quantidade e categorias da própria conta. Um arquivo só com cabeçalho não contém transações para importar. Reimportar um CSV com registros cria novos lançamentos, conforme a regra de reenvio descrita acima.
+
 O arquivo [`request.http`](request.http) registra exemplos usados durante o desenvolvimento. Ele ainda contém requisições antigas com `categoria` no corpo; para criar ou editar transações, siga o formato atual com `categoriaId` apresentado acima.
 
 ## Executar os testes
@@ -391,7 +411,8 @@ O objetivo permanece construir uma aplicação web completa. O estado atual incl
 - [x] Consulta de gastos por categoria para o dashboard.
 - [x] Consulta de evolução mensal para o dashboard.
 - [x] Importação CSV no formato do FinTrack, com validação e gravação integral.
-- [ ] Relatórios e definição do formato de exportação.
+- [x] Exportação CSV de transações com filtros e isolamento por usuário.
+- [ ] Definição dos relatórios adicionais.
 - [ ] Frontend com HTML, CSS e JavaScript, incluindo dashboard e gráficos.
 - [ ] Documentação formal da API e revisão dos exemplos HTTP antigos.
 - [ ] Preparação e validação do ambiente de produção, publicação e material de apresentação do portfólio.
